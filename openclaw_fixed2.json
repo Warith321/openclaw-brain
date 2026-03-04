@@ -1,0 +1,117 @@
+{
+  "wizard": {
+    "lastRunAt": "2026-03-04T02:44:42.474Z",
+    "lastRunVersion": "2026.3.2",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "kimi-coding:default": {
+        "provider": "kimi-coding",
+        "mode": "api_key"
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "kimi-coding": {
+        "baseUrl": "https://api.kimi.com/coding/",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "k2p5",
+            "name": "Kimi for Coding",
+            "reasoning": true,
+            "input": ["text", "image"],
+            "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+            "contextWindow": 262144,
+            "maxTokens": 32768
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "kimi-coding/k2p5"
+      },
+      "models": {
+        "kimi-coding/k2p5": {"alias": "Kimi for Coding"}
+      },
+      "workspace": "C:\\Users\\76077\\.openclaw\\workspace",
+      "compaction": {"mode": "safeguard"},
+      "maxConcurrent": 4,
+      "subagents": {"maxConcurrent": 8}
+    }
+  },
+  "tools": {"profile": "messaging"},
+  "messages": {"ackReactionScope": "group-mentions"},
+  "commands": {"native": "auto", "nativeSkills": "auto", "restart": true, "ownerDisplay": "raw"},
+  "session": {"dmScope": "per-channel-peer"},
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {"enabled": true},
+        "bootstrap-extra-files": {"enabled": true}
+      }
+    }
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "connectionMode": "websocket",
+      "domain": "feishu",
+      "groupPolicy": "allowlist",
+      "groupAllowFrom": ["oc_480193228a8b07972e37fbc8d5d9f143"],
+      "accounts": {
+        "default": "main",
+        "main": {
+          "appId": "cli_a92c80ab33b91bc4",
+          "appSecret": "9bcQLxtOL7xt0vtMY9eCGg2nQqszEqy8"
+        },
+        "bot2": {
+          "appId": "cli_a92cfa3c7af8dcb6",
+          "appSecret": "EEE9tXRg1UjzIlm2rMSGldOLsct5jP5K"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {"mode": "token", "token": "5489b2d3c4904341ee5e206e5bb4499cf2705e521bb65db2"},
+    "tailscale": {"mode": "off", "resetOnExit": false},
+    "nodes": {
+      "denyCommands": ["camera.snap", "camera.clip", "screen.record", "contacts.add", "calendar.add", "reminders.add", "sms.send"]
+    }
+  },
+  "plugins": {
+    "entries": {
+      "feishu": {"enabled": true}
+    },
+    "installs": {
+      "feishu": {
+        "source": "npm",
+        "spec": "@openclaw/feishu",
+        "installPath": "C:\\Users\\76077\\.openclaw\\extensions\\feishu",
+        "version": "2026.3.2",
+        "resolvedName": "@openclaw/feishu",
+        "resolvedVersion": "2026.3.2",
+        "resolvedSpec": "@openclaw/feishu@2026.3.2",
+        "integrity": "sha512-CpwjmLCS8gpZ5fFCRiEA+1i/L+E73Vhz5//TiwQjWJOtVPZEu44db294g3HUR6nB5L0IEpZgKU/JU69HgYl77w==",
+        "shasum": "ad77e27633b480f5c815e1922252a2f07c1765bd",
+        "resolvedAt": "2026-03-04T02:41:20.127Z",
+        "installedAt": "2026-03-04T02:41:22.359Z"
+      }
+    }
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.3.2",
+    "lastTouchedAt": "2026-03-04T02:44:42.511Z"
+  }
+}

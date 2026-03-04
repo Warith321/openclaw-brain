@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.1",
+    "lastTouchedAt": "2026-03-04T01:57:12.166Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-03T00:35:11.599Z",
+    "lastRunVersion": "2026.3.1",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "kimi-coding:default": {
+        "provider": "kimi-coding",
+        "mode": "api_key"
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "custom-api-ikuncode-cc": {
+        "baseUrl": "http://192.204.35.114:10086",
+        "apiKey": "sk-0abfb3670ad81fac29479b2b3efad9bfd9673234b40011b8524d6f1c2293c0ad",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "claude-4-6-sonnet",
+            "name": "claude-4-6-sonnet (Custom Provider)",
+            "reasoning": false,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 32768
+          }
+        ]
+      },
+      "kimi-coding": {
+        "baseUrl": "https://api.kimi.com/coding/",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "k2p5",
+            "name": "Kimi for Coding",
+            "reasoning": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 32768
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "custom-api-ikuncode-cc/claude-4-6-sonnet"
+      },
+      "models": {
+        "custom-api-ikuncode-cc/claude-4-6-sonnet": {
+          "alias": "sonnet4.6"
+        },
+        "kimi-coding/k2p5": {
+          "alias": "Kimi for Coding"
+        }
+      },
+      "workspace": "C:\\Users\\76077\\.openclaw\\workspace",
+      "contextPruning": {
+        "mode": "cache-ttl",
+        "ttl": "1h"
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "heartbeat": {
+        "every": "30m"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {
+          "enabled": true
+        },
+        "bootstrap-extra-files": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "channels": {
+    "qqbot": {
+      "clientSecret": "Sk2LexGZsBVp9Tn7Rl6Rm7Sn8UqCYuGc",
+      "enabled": false,
+      "appId": 102889904
+    },
+    "feishu": {
+      "enabled": true,
+      "connectionMode": "websocket",
+      "accounts": {
+        "default": "main",
+        "main": {
+          "appId": "cli_a92c80ab33b91bc4",
+          "appSecret": "9bcQLxtOL7xt0vtMY9eCGg2nQqszEqy8"
+        },
+        "bot2": {
+          "appId": "cli_a92cfa3c7af8dcb6",
+          "appSecret": "EEE9tXRg1UjzIlm2rMSGldOLsct5jP5K"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "1ebec72cc5955a019e1e2d56e3dbb63a9849084c580070cc"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "nodes": {
+      "denyCommands": [
+        "camera.snap",
+        "camera.clip",
+        "screen.record",
+        "calendar.add",
+        "contacts.add",
+        "reminders.add"
+      ]
+    }
+  },
+  "plugins": {
+    "entries": {
+      "qqbot": {
+        "enabled": false
+      },
+      "feishu-openclaw": {
+        "enabled": true
+      },
+      "feishu": {
+        "enabled": false
+      }
+    }
+  }
+}

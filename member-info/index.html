@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>群成员信息管理系统</title>
+  <style>
+    :root {
+      --primary: #6c63ff;
+      --secondary: #f50057;
+      --bg: #f4f6fb;
+      --card: #fff;
+      --text: #333;
+      --muted: #888;
+      --border: #e0e0e0;
+      --success: #4caf50;
+      --warning: #ff9800;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, var(--primary), #a18cd1);
+      color: #fff;
+      padding: 28px 0 20px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(108,99,255,0.15);
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: 2px; }
+    header p { margin-top: 6px; font-size: 0.95rem; opacity: 0.85; }
+
+    .container { max-width: 1000px; margin: 0 auto; padding: 32px 16px; }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 8px; margin-bottom: 28px;
+      background: var(--card); border-radius: 12px; padding: 8px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+    }
+    .tab-btn {
+      flex: 1; padding: 10px 0; border: none; border-radius: 8px;
+      background: transparent; font-size: 1rem; cursor: pointer; color: var(--muted);
+      transition: all .2s;
+    }
+    .tab-btn.active {
+      background: var(--primary); color: #fff; font-weight: 600;
+      box-shadow: 0 2px 8px rgba(108,99,255,0.25);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Form */
+    .form-card {
+      background: var(--card); border-radius: 16px; padding: 32px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    .form-card h2 { font-size: 1.2rem; margin-bottom: 24px; color: var(--primary); }
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    }
+    @media(max-width:600px){ .form-grid { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 0.88rem; color: var(--muted); font-weight: 500; }
+    label span.req { color: var(--secondary); margin-left: 2px; }
+    input, select {
+      padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.97rem; outline: none; transition: border .2s;
+      background: #fafafa;
+    }
+    input:focus, select:focus { border-color: var(--primary); background: #fff; }
+    .btn-submit {
+      margin-top: 24px; width: 100%; padding: 13px;
+      background: linear-gradient(135deg, var(--primary), #a18cd1);
+      color: #fff; border: none; border-radius: 10px; font-size: 1.05rem;
+      font-weight: 600; cursor: pointer; letter-spacing: 1px;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Member List */
+    .list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .list-header h2 { font-size: 1.15rem; color: var(--primary); }
+    .search-box {
+      padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.95rem; outline: none; width: 220px;
+    }
+    .search-box:focus { border-color: var(--primary); }
+
+    .member-table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); }
+    thead { background: linear-gradient(135deg, var(--primary), #a18cd1); color: #fff; }
+    th { padding: 12px 14px; font-size: 0.88rem; font-weight: 600; text-align: left; white-space: nowrap; }
+    td { padding: 11px 14px; font-size: 0.88rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f7f5ff; }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .badge-single { background: #fff0f3; color: var(--secondary); }
+    .badge-married { background: #e8f5e9; color: var(--success); }
+    .badge-other { background: #fff8e1; color: var(--warning); }
+    .btn-delete {
+      background: none; border: none; cursor: pointer; color: #ccc;
+      font-size: 1.1rem; transition: color .2s;
+    }
+    .btn-delete:hover { color: var(--secondary); }
+
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--muted);
+      background: var(--card); border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* Email Log */
+    .email-log {
+      background: var(--card); border-radius: 16px; padding: 28px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    .email-log h2 { font-size: 1.15rem; color: var(--primary); margin-bottom: 18px; }
+    .log-item {
+      border-left: 3px solid var(--primary); padding: 10px 14px;
+      margin-bottom: 12px; background: #f7f5ff; border-radius: 0 8px 8px 0;
+    }
+    .log-item .log-to { font-weight: 600; color: var(--text); }
+    .log-item .log-time { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
+    .log-item .log-msg { font-size: 0.9rem; color: #555; margin-top: 4px; }
+    .btn-trigger {
+      padding: 10px 24px; background: var(--secondary); color: #fff;
+      border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+      font-weight: 600; margin-bottom: 20px; transition: opacity .2s;
+    }
+    .btn-trigger:hover { opacity: 0.88; }
+
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: #323232; color: #fff; padding: 12px 28px; border-radius: 30px;
+      font-size: 0.95rem; opacity: 0; pointer-events: none;
+      transition: opacity .3s; z-index: 9999;
+    }
+    .toast.show { opacity: 1; }
+
+    /* Stats */
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-bottom: 24px;
+    }
+    @media(max-width:600px){ .stats { grid-template-columns: repeat(2,1fr); } }
+    .stat-card {
+      background: var(--card); border-radius: 12px; padding: 18px 14px;
+      text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .stat-card .num { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-card .label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>👥 群成员信息管理系统</h1>
+  <p>统一收集 · 智能管理 · 自动提醒</p>
+</header>
+
+<div class="container">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="stat-total">0</div><div class="label">总成员</div></div>
+    <div class="stat-card"><div class="num" id="stat-single">0</div><div class="label">单身成员</div></div>
+    <div class="stat-card"><div class="num" id="stat-married">0</div><div class="label">已婚成员</div></div>
+    <div class="stat-card"><div class="num" id="stat-email">0</div><div class="label">已发催婚邮件</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('form')">📝 填写信息</button>
+    <button class="tab-btn" onclick="switchTab('list')">📋 成员列表</button>
+    <button class="tab-btn" onclick="switchTab('email')">📧 邮件记录</button>
+  </div>
+
+  <!-- Tab: Form -->
+  <div id="tab-form" class="tab-content active">
+    <div class="form-card">
+      <h2>📝 个人信息填写</h2>
+      <form id="infoForm" onsubmit="submitForm(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>姓名 <span class="req">*</span></label>
+            <input type="text" id="f-name" placeholder="请输入真实姓名" required />
+          </div>
+          <div class="form-group">
+            <label>年龄 <span class="req">*</span></label>
+            <input type="number" id="f-age" placeholder="请输入年龄" min="1" max="120" required />
+          </div>
+          <div class="form-group">
+            <label>出生年月日 <span class="req">*</span></label>
+            <input type="date" id="f-birth" required />
+          </div>
+          <div class="form-group">
+            <label>QQ号 <span class="req">*</span></label>
+            <input type="text" id="f-qq" placeholder="请输入QQ号" pattern="[0-9]{5,12}" required />
+          </div>
+          <div class="form-group">
+            <label>手机号 <span class="req">*</span></label>
+            <input type="tel" id="f-phone" placeholder="请输入手机号" pattern="1[3-9][0-9]{9}" required />
+          </div>
+          <div class="form-group">
+            <label>邮箱 <span class="req">*</span></label>
+            <input type="email" id="f-email" placeholder="请输入常用邮箱" required />
+          </div>
+          <div class="form-group">
+            <label>学历 <span class="req">*</span></label>
+            <select id="f-edu" required>
+              <option value="">请选择学历</option>
+              <option>初中及以下</option>
+              <option>高中/中专</option>
+              <option>大专</option>
+              <option>本科</option>
+              <option>硕士研究生</option>
+              <option>博士研究生</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>目前工作状态 <span class="req">*</span></label>
+            <select id="f-work" required>
+              <option value="">请选择工作状态</option>
+              <option>在职</option>
+              <option>待业中</option>
+              <option>自由职业</option>
+              <option>学生</option>
+              <option>退休</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>婚姻状态 <span class="req">*</span></label>
+            <select id="f-marry" required>
+              <option value="">请选择婚姻状态</option>
+              <option>未婚</option>
+              <option>已婚</option>
+              <option>离异</option>
+              <option>丧偶</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit">✅ 提交信息</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tab: List -->
+  <div id="tab-list" class="tab-content">
+    <div class="list-header">
+      <h2>📋 成员信息列表</h2>
+      <input class="search-box" type="text" placeholder="🔍 搜索姓名/QQ/邮箱..." oninput="renderList(this.value)" />
+    </div>
+    <div id="list-container"></div>
+  </div>
+
+  <!-- Tab: Email -->
+  <div id="tab-email" class="tab-content">
+    <div class="email-log">
+      <h2>📧 催婚邮件记录</h2>
+      <button class="btn-trigger" onclick="triggerEmailCheck()">🚀 立即触发一次邮件检查</button>
+      <div id="email-log-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ============ DATA ============
+  let members = JSON.parse(localStorage.getItem('members') || '[]');
+  let emailLogs = JSON.parse(localStorage.getItem('emailLogs') || '[]');
+
+  function save() {
+    localStorage.setItem('members', JSON.stringify(members));
+    localStorage.setItem('emailLogs', JSON.stringify(emailLogs));
+    updateStats();
+  }
+
+  // ============ TABS ============
+  function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'list') renderList();
+    if (name === 'email') renderEmailLog();
+  }
+
+  // ============ FORM ============
+  function submitForm(e) {
+    e.preventDefault();
+    const phone = document.getElementById('f-phone').value;
+    const qq = document.getElementById('f-qq').value;
+    if (!/^1[3-9]\d{9}$/.test(phone)) { showToast('手机号格式不正确！'); return; }
+    if (!/^\d{5,12}$/.test(qq)) { showToast('QQ号格式不正确！'); return; }
+
+    const member = {
+      id: Date.now(),
+      name: document.getElementById('f-name').value.trim(),
+      age: document.getElementById('f-age').value,
+      birth: document.getElementById('f-birth').value,
+      qq: qq,
+      phone: phone,
+      email: document.getElementById('f-email').value.trim(),
+      edu: document.getElementById('f-edu').value,
+      work: document.getElementById('f-work').value,
+      marry: document.getElementById('f-marry').value,
+      joinTime: Date.now(),
+      lastEmailTime: null
+    };
+
+    // 检查QQ号是否重复
+    if (members.find(m => m.qq === member.qq)) {
+      showToast('该QQ号已提交过信息！');
+      return;
+    }
+
+    members.push(member);
+    save();
+    document.getElementById('infoForm').reset();
+    showToast('✅ 信息提交成功！感谢填写~');
+  }
+
+  // ============ LIST ============
+  function renderList(search = '') {
+    const container = document.getElementById('list-container');
+    let data = members;
+    if (search) {
+      const kw = search.toLowerCase();
+      data = members.filter(m =>
+        m.name.toLowerCase().includes(kw) ||
+        m.qq.includes(kw) ||
+        m.email.toLowerCase().includes(kw)
+      );
+    }
+    if (data.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div>暂无成员信息</div></div>`;
+      return;
+    }
+    container.innerHTML = `
+      <div class="member-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>姓名</th><th>年龄</th><th>QQ号</th>
+              <th>手机号</th><th>邮箱</th><th>学历</th>
+              <th>工作状态</th><th>婚姻状态</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((m, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td><strong>${m.name}</strong></td>
+                <td>${m.age}</td>
+                <td>${m.qq}</td>
+                <td>${m.phone}</td>
+                <td>${m.email}</td>
+                <td>${m.edu}</td>
+                <td>${m.work}</td>
+                <td><span class="badge ${
+                  m.marry === '已婚' ? 'badge-married' :
+                  m.marry === '未婚' ? 'badge-single' : 'badge-other'
+                }">${m.marry}</span></td>
+                <td><button class="btn-delete" onclick="deleteMember(${m.id})" title="删除">🗑️</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function deleteMember(id) {
+    if (!confirm('确认删除该成员信息？')) return;
+    members = members.filter(m => m.id !== id);
+    save();
+    renderList();
+    showToast('已删除成员信息');
+  }
+
+  // ============ EMAIL ============
+  const EMAIL_INTERVAL_DAYS = 30;
+
+  function checkAndSendEmails(manual = false) {
+    const now = Date.now();
+    const intervalMs = EMAIL_INTERVAL_DAYS * 24 * 60 * 60 * 1000;
+    let sent = 0;
+
+    members.forEach(m => {
+      const needSend = ['未婚', '离异', '丧偶'].includes(m.marry);
+      if (!needSend) return;
+      const lastSent = m.lastEmailTime || (m.joinTime - intervalMs - 1);
+      if (now - lastSent >= intervalMs) {
+        // 模拟发送邮件
+        const log = {
+          id: Date.now() + Math.random(),
+          to: m.name,
+          email: m.email,
+          marry: m.marry,
+          time: new Date().toLocaleString('zh-CN'),
+          subject: '来自群组的温馨提示 💌',
+          body: generateEmailBody(m)
+        };
+        emailLogs.unshift(log);
+        m.lastEmailTime = now;
+        sent++;
+      }
+    });
+
+    save();
+    renderEmailLog();
+    if (manual) {
+      showToast(sent > 0 ? `✅ 已向 ${sent} 位成员发送催婚提醒邮件！` : '暂无需要发送邮件的成员（已发送过或已婚）');
+    }
+    return sent;
+  }
+
+  function generateEmailBody(m) {
+    const templates = [
+      `亲爱的 ${m.name}，时光飞逝，愿你早日找到人生伴侣，携手同行！💑`,
+      `Hi ${m.name}，生活中有个伴侣会让日子更有滋味，群里的小伙伴们都在为你加油哦～ 💪`,
+      `${m.name} 你好，幸福是需要主动追求的！别让好缘分从身边溜走哦～ 🌸`,
+    ];
+    return templates[Math.floor(Math.random() * templates.length)];
+  }
+
+  function triggerEmailCheck() {
+    checkAndSendEmails(true);
+  }
+
+  function renderEmailLog() {
+    const container = document.getElementById('email-log-list');
+    if (emailLogs.length === 0) {
+      container.innerHTML = `<div style="color:var(--muted);text-align:center;padding:30px;">暂无邮件发送记录</div>`;
+      return;
+    }
+    container.innerHTML = emailLogs.map(log => `
+      <div class="log-item">
+        <div class="log-to">📮 收件人：${log.to}（${log.email}）<span class="badge badge-single" style="margin-left:8px">${log.marry}</span></div>
+        <div class="log-time">🕐 发送时间：${log.time}</div>
+        <div class="log-msg">💌 ${log.body}</div>
+      </div>
+    `).join('');
+  }
+
+  // ============ STATS ============
+  function updateStats() {
+    document.getElementById('stat-total').textContent = members.length;
+    document.getElementById('stat-single').textContent = members.filter(m => ['未婚','离异','丧偶'].includes(m.marry)).length;
+    document.getElementById('stat-married').textContent = members.filter(m => m.marry === '已婚').length;
+    document.getElementById('stat-email').textContent = emailLogs.length;
+  }
+
+  // ============ TOAST ============
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ============ AUTO CHECK (每30天自动检查) ============
+  // 页面打开时检查一次
+  window.onload = function() {
+    updateStats();
+    checkAndSendEmails(false);
+    // 模拟定时：每天检查一次（实际场景请用后端cron）
+    setInterval(() => checkAndSendEmails(false), 24 * 60 * 60 * 1000);
+  };
+</script>
+</body>
+</html>
