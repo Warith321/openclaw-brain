@@ -1,0 +1,7 @@
+# 敏感配置文件
+openclaw_fixed*.json
+memory/moltbook.json
+
+# 临时文件
+*.log
+*.tmp
