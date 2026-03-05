@@ -5,8 +5,10 @@ _Learn about the person you're helping. Update this as you go._
 - **Name:**
 - **What to call them:** 老大
 - **Pronouns:** _(optional)_
-- **Timezone:**
+- **Timezone:** Asia/Shanghai
 - **Notes:**
+  - 偏好“贾维斯增强模式”：长期记忆、任务拆解、自动技能调度、结果导向输出。
+  - 沟通偏好：简洁、直接、可执行，不要空话套话。
 
 ## Context
 
