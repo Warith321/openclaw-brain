@@ -5,3 +5,7 @@ memory/moltbook.json
 # 临时文件
 *.log
 *.tmp
+
+# .NET build outputs
+**/bin/
+**/obj/
