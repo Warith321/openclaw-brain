@@ -1,23 +1,39 @@
 <Window x:Class="P2PFileTransfer.Wpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="P2P File Transfer (WPF)" Height="560" Width="900">
+        Title="P2P 文件传输（双机版）" Height="700" Width="920">
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="基于 Socket 的 P2P 文件传输" FontSize="20" FontWeight="Bold"/>
+        <TextBlock Text="P2P 文件传输桌面应用（两个电脑分别运行）" FontSize="20" FontWeight="Bold"/>
 
-        <Grid Grid.Row="1" Margin="0,12,0,12">
+        <!-- 角色选择 -->
+        <Border Grid.Row="1" BorderBrush="#DDD" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,12,0,12" Background="#FAFAFA">
+            <StackPanel>
+                <TextBlock Text="第 1 步：请选择当前电脑角色" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="BtnChooseReceiver" Content="我是接收端电脑" Width="180" Height="36" Margin="0,0,8,0" Click="ChooseReceiver_Click"/>
+                    <Button x:Name="BtnChooseSender" Content="我是发送端电脑" Width="180" Height="36" Click="ChooseSender_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="2" x:Name="RoleHintText" Margin="0,0,0,12" TextWrapping="Wrap" Foreground="#444"/>
+
+        <!-- 主工作区 -->
+        <Grid Grid.Row="3" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <GroupBox Header="接收端" Margin="0,0,8,0">
+            <GroupBox Header="接收端（在接收文件的那台电脑上操作）" Margin="0,0,8,0" x:Name="ReceiverGroup">
                 <StackPanel Margin="10">
                     <TextBlock Text="监听端口"/>
                     <TextBox x:Name="ReceivePortBox" Text="9000" Margin="0,4,0,8"/>
@@ -28,13 +44,16 @@
                         <Button Content="浏览" Width="70" Click="BrowseSaveDir_Click"/>
                     </DockPanel>
 
-                    <Button Content="启动接收" Height="34" Click="StartReceive_Click"/>
+                    <WrapPanel>
+                        <Button Content="启动接收" Width="110" Height="34" Click="StartReceive_Click" Margin="0,0,8,0"/>
+                        <Button Content="停止接收" Width="110" Height="34" Click="StopReceive_Click"/>
+                    </WrapPanel>
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="发送端" Grid.Column="1" Margin="8,0,0,0">
+            <GroupBox Header="发送端（在发送文件的那台电脑上操作）" Grid.Column="1" Margin="8,0,0,0" x:Name="SenderGroup">
                 <StackPanel Margin="10">
-                    <TextBlock Text="目标 IP"/>
+                    <TextBlock Text="目标 IP（接收端电脑IP）"/>
                     <TextBox x:Name="HostBox" Text="127.0.0.1" Margin="0,4,0,8"/>
 
                     <TextBlock Text="目标端口"/>
@@ -51,7 +70,7 @@
             </GroupBox>
         </Grid>
 
-        <GroupBox Grid.Row="2" Header="日志 / 进度">
+        <GroupBox Grid.Row="4" Header="日志 / 进度">
             <DockPanel Margin="10">
                 <ProgressBar x:Name="Progress" Height="22" DockPanel.Dock="Top" Minimum="0" Maximum="100" Margin="0,0,0,8"/>
                 <TextBox x:Name="LogBox" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
