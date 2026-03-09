@@ -170,15 +170,45 @@ async function fetchAll() {
   // 按时间排序
   all.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // 翻译标题和摘要为中文（取前60条）
+  console.log('[Fetcher] Translating to Chinese...');
+  const toTranslate = all.slice(0, 60);
+  const translated = [];
+  for (const item of toTranslate) {
+    try {
+      const titleZh = await translateToZh(item.title);
+      const summaryZh = item.summary ? await translateToZh(item.summary.slice(0, 200)) : '';
+      translated.push({ ...item, titleZh, summaryZh });
+    } catch (_) {
+      translated.push({ ...item, titleZh: '', summaryZh: '' });
+    }
+    await new Promise(r => setTimeout(r, 300));
+  }
+  const finalItems = [...translated, ...all.slice(60)];
+
   const cache = {
     updatedAt: new Date().toISOString(),
-    total: all.length,
-    items: all,
+    total: finalItems.length,
+    items: finalItems,
   };
 
   fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-  console.log(`[Fetcher] Done. ${all.length} items cached.`);
+  console.log(`[Fetcher] Done. ${finalItems.length} items cached.`);
   return cache;
+}
+
+async function translateToZh(text) {
+  if (!text) return '';
+  try {
+    const encoded = encodeURIComponent(text.slice(0, 300));
+    const url = `https://api.mymemory.translated.net/get?q=${encoded}&langpair=en|zh`;
+    const res = await fetch(url);
+    const data = JSON.parse(res);
+    if (data && data.responseData && data.responseData.translatedText) {
+      return data.responseData.translatedText;
+    }
+  } catch (e) {}
+  return '';
 }
 
 module.exports = { fetchAll, CACHE_FILE };
