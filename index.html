@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>全球 AI 动态 | yaopfhome</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --border: #2a2a2a;
+      --accent: #7c3aed;
+      --accent2: #06b6d4;
+      --text: #e5e5e5;
+      --muted: #888;
+      --tag-bg: #1e1e2e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,13,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+    .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    #status { font-size: 12px; color: var(--muted); }
+    .filters {
+      padding: 16px 32px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(124,58,237,0.1);
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      padding: 24px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .card-header { display: flex; align-items: center; gap: 8px; }
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--tag-bg);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .tag-HN { color: #f60; }
+    .tag-Reddit { color: #ff4500; }
+    .tag-OpenAI { color: #10a37f; }
+    .tag-Anthropic { color: #d4a27f; }
+    .tag-Google\ AI { color: var(--accent2); }
+    .tag-DeepMind { color: #4285f4; }
+    .tag-MIT\ TR { color: #a855f7; }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .card-summary {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .card-footer {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      margin-top: auto;
+    }
+    .loading {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+    .loading .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty { text-align: center; padding: 60px; color: var(--muted); }
+    @media (max-width: 600px) {
+      header { padding: 16px; }
+      #grid { padding: 16px; grid-template-columns: 1fr; }
+      .filters { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">AI<span>·</span>Radar</div>
+    <div id="status">加载中...</div>
+  </header>
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-tag="">全部</button>
+    <button class="filter-btn" data-tag="HN">Hacker News</button>
+    <button class="filter-btn" data-tag="Reddit">Reddit</button>
+    <button class="filter-btn" data-tag="OpenAI">OpenAI</button>
+    <button class="filter-btn" data-tag="Anthropic">Anthropic</button>
+    <button class="filter-btn" data-tag="Google AI">Google AI</button>
+    <button class="filter-btn" data-tag="DeepMind">DeepMind</button>
+    <button class="filter-btn" data-tag="MIT TR">MIT TR</button>
+  </div>
+  <div id="grid">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>正在加载最新 AI 动态...</div>
+    </div>
+  </div>
+
+  <script>
+    let allItems = [];
+    let activeTag = '';
+
+    function relativeTime(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 60) return `${m} 分钟前`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h} 小时前`;
+      return `${Math.floor(h / 24)} 天前`;
+    }
+
+    function renderCards(items) {
+      const grid = document.getElementById('grid');
+      if (!items.length) {
+        grid.innerHTML = '<div class="empty">暂无数据</div>';
+        return;
+      }
+      grid.innerHTML = items.map(item => `
+        <a class="card" href="${item.url}" target="_blank" rel="noopener">
+          <div class="card-header">
+            <span class="tag tag-${CSS.escape ? item.tag : item.tag}"
+              style="color: inherit"
+              data-tag="${item.tag}">${item.tag}</span>
+            <span style="font-size:11px;color:var(--muted)">${item.source}</span>
+          </div>
+          <div class="card-title">${escHtml(item.title)}</div>
+          ${item.summary ? `<div class="card-summary">${escHtml(item.summary)}</div>` : ''}
+          <div class="card-footer">
+            <span>${relativeTime(item.date)}</span>
+          </div>
+        </a>
+      `).join('');
+
+      // 给 tag 着色
+      document.querySelectorAll('.tag[data-tag]').forEach(el => {
+        const map = {
+          'HN': '#f60', 'Reddit': '#ff4500', 'OpenAI': '#10a37f',
+          'Anthropic': '#d4a27f', 'Google AI': '#06b6d4',
+          'DeepMind': '#4285f4', 'MIT TR': '#a855f7',
+        };
+        el.style.color = map[el.dataset.tag] || '#888';
+      });
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function applyFilter(tag) {
+      activeTag = tag;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tag === tag);
+      });
+      const filtered = tag ? allItems.filter(i => i.tag === tag) : allItems;
+      renderCards(filtered);
+    }
+
+    document.getElementById('filters').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      applyFilter(btn.dataset.tag);
+    });
+
+    async function load() {
+      try {
+        const res = await fetch('/api/news?limit=100');
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
+        allItems = data.items || [];
+        const updated = new Date(data.updatedAt).toLocaleString('zh-CN');
+        document.getElementById('status').textContent = `${data.total} 条 · 更新于 ${updated}`;
+        applyFilter(activeTag);
+      } catch (e) {
+        document.getElementById('grid').innerHTML =
+          `<div class="empty">加载失败：${e.message}<br><small>请稍后刷新重试</small></div>`;
+        document.getElementById('status').textContent = '加载失败';
+      }
+    }
+
+    load();
+    // 每 5 分钟刷新一次前端
+    setInterval(load, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
