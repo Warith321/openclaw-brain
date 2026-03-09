@@ -170,19 +170,27 @@ async function fetchAll() {
   // 按时间排序
   all.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // 翻译标题和摘要为中文（取前60条）
-  console.log('[Fetcher] Translating to Chinese...');
+  // 用 GPT 批量翻译标题+摘要为中文（前60条）
+  console.log('[Fetcher] Translating to Chinese via GPT...');
   const toTranslate = all.slice(0, 60);
   const translated = [];
-  for (const item of toTranslate) {
+  // 每批10条，减少 API 调用次数
+  for (let i = 0; i < toTranslate.length; i += 10) {
+    const batch = toTranslate.slice(i, i + 10);
     try {
-      const titleZh = await translateToZh(item.title);
-      const summaryZh = item.summary ? await translateToZh(item.summary.slice(0, 200)) : '';
-      translated.push({ ...item, titleZh, summaryZh });
-    } catch (_) {
-      translated.push({ ...item, titleZh: '', summaryZh: '' });
+      const input = batch.map((item, idx) =>
+        `${idx + 1}. 标题: ${item.title}\n   摘要: ${item.summary ? item.summary.slice(0, 150) : ''}`
+      ).join('\n');
+
+      const result = await gptTranslateBatch(input, batch.length);
+      for (let j = 0; j < batch.length; j++) {
+        translated.push({ ...batch[j], titleZh: result[j]?.titleZh || '', summaryZh: result[j]?.summaryZh || '' });
+      }
+    } catch (e) {
+      console.warn('[GPT] batch failed:', e.message);
+      batch.forEach(item => translated.push({ ...item, titleZh: '', summaryZh: '' }));
     }
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 500));
   }
   const finalItems = [...translated, ...all.slice(60)];
 
@@ -197,18 +205,58 @@ async function fetchAll() {
   return cache;
 }
 
-async function translateToZh(text) {
-  if (!text) return '';
-  try {
-    const encoded = encodeURIComponent(text.slice(0, 300));
-    const url = `https://api.mymemory.translated.net/get?q=${encoded}&langpair=en|zh`;
-    const res = await fetch(url);
-    const data = JSON.parse(res);
-    if (data && data.responseData && data.responseData.translatedText) {
-      return data.responseData.translatedText;
-    }
-  } catch (e) {}
-  return '';
+const GPT_API_KEY = 'sk-f95992ae53672c33dcc99d6b8b7709954e77ed2aecd364a363bee6b53b8b202b';
+const GPT_API_URL = 'https://nekocode.ai/v1/chat/completions';
+const GPT_MODEL = 'gpt5.4';
+
+async function gptTranslateBatch(input, count) {
+  const body = JSON.stringify({
+    model: GPT_MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: `你是一个AI新闻翻译助手。将用户提供的英文标题和摘要翻译成简洁的中文。
+严格按照以下JSON格式返回，不要有其他内容：
+[{"titleZh":"中文标题","summaryZh":"中文摘要"},...]
+共${count}条，顺序对应。摘要控制在50字以内。`
+      },
+      { role: 'user', content: input }
+    ],
+    temperature: 0.3,
+  });
+
+  return new Promise((resolve, reject) => {
+    const url = new URL(GPT_API_URL);
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GPT_API_KEY}`,
+        'Content-Length': Buffer.byteLength(body),
+      },
+      timeout: 30000,
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          const content = json.choices[0].message.content.trim();
+          const result = JSON.parse(content);
+          resolve(result);
+        } catch (e) {
+          reject(new Error('GPT parse failed: ' + e.message));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('GPT timeout')); });
+    req.write(body);
+    req.end();
+  });
 }
 
 module.exports = { fetchAll, CACHE_FILE };
